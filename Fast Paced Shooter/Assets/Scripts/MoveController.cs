@@ -31,6 +31,7 @@ public class MoveController : MonoBehaviour
     bool sliding = false;
     [SerializeField] float slideForce;
     [SerializeField] float dashForce;
+    [SerializeField] float dashTime;
 
 
     ////////// INPUTS //////////
@@ -93,6 +94,11 @@ public class MoveController : MonoBehaviour
                 state = State.Running;
                 break;
             }
+            if (sliding && IsGrounded()
+            {
+                state = State.Slide;
+                break;
+            }
             yield return null;
             SetVelocity();
         }
@@ -113,6 +119,11 @@ public class MoveController : MonoBehaviour
                 state = State.Idle;
                 break;
             }
+            if (sliding && IsGrounded())
+            {
+                state = State.Slide;
+                break;
+            }
             yield return null;
             SetVelocity();
         }
@@ -126,7 +137,7 @@ public class MoveController : MonoBehaviour
         vel.x = input.x * dashForce;
 
         // Wait dash time
-        yield return new WaitForSeconds(0.1f);
+        yield return new WaitForSeconds(dashTime);
 
         state = State.Idle;
 
@@ -138,8 +149,10 @@ public class MoveController : MonoBehaviour
         // Set Velocity
         vel.x = input.x * slideForce;
 
+        state = State.Idle;
+
         // Hold until let go of input
-        while (state == State.Running)
+        while (sliding)
         {
             vel.x = input.x * movmentSpeed;
             vel.y = input.y * movmentSpeed;
@@ -152,8 +165,6 @@ public class MoveController : MonoBehaviour
             yield return null;
             SetVelocity();
         }
-
-        state = State.Idle;
 
         NextState();
     }
@@ -172,6 +183,10 @@ public class MoveController : MonoBehaviour
     }
 
     ////////// Functions //////////
+    bool IsGrounded()
+    {
+        return Physics.Raycast(transform.position, Vector3.down, 1.1f);
+    }
     void SetVelocity()
     {
         rb.velocity = transform.forward * vel.y + transform.right * vel.x;
